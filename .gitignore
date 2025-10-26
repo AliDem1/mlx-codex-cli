@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+*.log
+
+# Build artifacts
+*.app
+*.zip
+/dist/
+
+# Editors
+.idea/
+.vscode/
