@@ -119,7 +119,7 @@ All tunables are environment variables. You can set them in your shell profile, 
 | `MLX_CODEX_REASONING` | `medium` | Reasoning effort flag passed to Codex (`-c model_reasoning_effort=`). Leave at `medium` if you want stock behavior, or set `high` together with the penalties above for the best GLM-4.6 experience. Set `SKIP_REASONING_FLAG=1` to omit. |
 | `MLX_CODEX_LOG_FILE` | `~/Library/Logs/mzbac-mlx-lm-<port>.log` | Location for MLX server logs when running detached. |
 | `MLX_CODEX_READINESS_TIMEOUT` | `300` | Seconds to wait for `/v1/models` before giving up. |
-| `CHAT_ENABLE_THINKING` | `1` | Enables GLM “thinking” XML tokens when supported. Set `0` for models that do not implement the `<think>` stream. |
+| `CHAT_ENABLE_THINKING` | `1` | Enables GLM “thinking” XML tokens when supported. Set `0` for models that do not implement the `<think>` stream. Codex suppresses `<think>` output unless you pass `--show-thinking`. |
 | `CODEX_REPETITION_PENALTY` | `1.12` | Codex CLI sampling override (override via env to change). Keeps high-reasoning traces from looping while still allowing the model to repeat important tokens. |
 | `CODEX_FREQUENCY_PENALTY` | `0.15` | Codex CLI sampling override (override via env to change). Gently discourages verbatim restatements without muting necessary numbers or code. |
 | `CODEX_PRESENCE_PENALTY` | `0.05` | Codex CLI sampling override (override via env to change). Nudges Codex toward fresh evidence while keeping summaries coherent. |
