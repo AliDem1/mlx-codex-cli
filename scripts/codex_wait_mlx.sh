@@ -28,6 +28,21 @@ BASE_URL="http://${HOST}:${PORT}/v1"
 TIMEOUT=${READINESS_TIMEOUT:-300}
 LOG_FILE=${LOG_FILE:-"$HOME/Library/Logs/mzbac-mlx-lm-${PORT}.log"}
 
+REPETITION_PENALTY=${CODEX_REPETITION_PENALTY:-}
+FREQUENCY_PENALTY=${CODEX_FREQUENCY_PENALTY:-}
+PRESENCE_PENALTY=${CODEX_PRESENCE_PENALTY:-}
+
+SAMPLING_FLAGS=()
+if [[ -n "${REPETITION_PENALTY}" ]]; then
+  SAMPLING_FLAGS+=(-c sampling.repetition_penalty="${REPETITION_PENALTY}")
+fi
+if [[ -n "${FREQUENCY_PENALTY}" ]]; then
+  SAMPLING_FLAGS+=(-c sampling.frequency_penalty="${FREQUENCY_PENALTY}")
+fi
+if [[ -n "${PRESENCE_PENALTY}" ]]; then
+  SAMPLING_FLAGS+=(-c sampling.presence_penalty="${PRESENCE_PENALTY}")
+fi
+
 echo "[codex-wait-mlx] waiting for server on :${PORT} ..."
 
 start_ts=$(date +%s)
@@ -57,16 +72,22 @@ fi
 cd "$WORKDIR"
 if [[ "${SKIP_REASONING_FLAG:-}" == "1" ]]; then
   if [[ -n "${PROXY_BASE:-}" ]]; then
-    exec codex --profile "$PROFILE" -c model_providers.mlx.base_url="$PROXY_BASE"
+    exec codex --profile "$PROFILE" \
+      -c model_providers.mlx.base_url="$PROXY_BASE" \
+      "${SAMPLING_FLAGS[@]}"
   else
-    exec codex --profile "$PROFILE"
+    exec codex --profile "$PROFILE" \
+      "${SAMPLING_FLAGS[@]}"
   fi
 else
   if [[ -n "${PROXY_BASE:-}" ]]; then
     exec codex --profile "$PROFILE" \
       -c model_providers.mlx.base_url="$PROXY_BASE" \
-      -c model_reasoning_effort="$REASONING"
+      -c model_reasoning_effort="$REASONING" \
+      "${SAMPLING_FLAGS[@]}"
   else
-    exec codex --profile "$PROFILE" -c model_reasoning_effort="$REASONING"
+    exec codex --profile "$PROFILE" \
+      -c model_reasoning_effort="$REASONING" \
+      "${SAMPLING_FLAGS[@]}"
   fi
 fi
