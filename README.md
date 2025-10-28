@@ -17,7 +17,7 @@ This repo contains only source files (AppleScript + bash helpers) so you can aud
 Flow:
 1. AppleScript tab #1 executes `start_mzbac_mlx.sh` (optionally detached) to serve the model on `MLX_CODEX_HOST:MLX_CODEX_PORT`.
 2. AppleScript waits one second, then tab #2 runs `codex_wait_mlx.sh`, which polls `/v1/models` until available.
-3. Once ready, Codex CLI runs with your profile (e.g., `codex --profile mlx-codex-45 -c model_reasoning_effort=medium`), targeting the MLX server as its OpenAI-compatible backend.
+3. Once ready, Codex CLI runs with your profile (e.g., `codex --profile mlx-codex-45 -c model_reasoning_effort=high`), targeting the MLX server as its OpenAI-compatible backend.
 
 ---
 
@@ -52,7 +52,7 @@ Flow:
    MLX_CODEX_PROFILE="your-codex-profile" \
    ./scripts/start_mzbac_mlx.sh "$MLX_CODEX_MODEL_PATH" "Your Model" 8080 &
    MLX_CODEX_PROFILE="your-codex-profile" \
-   ./scripts/codex_wait_mlx.sh 127.0.0.1 8080 "$MLX_CODEX_PROFILE" "$HOME/your-workspace" medium
+   ./scripts/codex_wait_mlx.sh 127.0.0.1 8080 "$MLX_CODEX_PROFILE" "$HOME/your-workspace" high
    ```
 6. **Or build the macOS app**:
    - Open `applescript/Start-MLX-Codex-CLI.applescript` in Script Editor.
@@ -84,14 +84,17 @@ If you are new to MLX or Codex, follow these small steps in order:
    export MLX_CODEX_WORKSPACE=~/codex-workspace
    export MLX_CODEX_MODEL_PATH=~/.lmstudio/models/GLM-4.5-Air-MLX-8bit
    export MLX_CODEX_PROFILE=mlx-codex-45
-   export MLX_CODEX_REASONING=medium        # keep default for stability
-   export CHAT_ENABLE_THINKING=1            # keep default for stability
+   export MLX_CODEX_REASONING=high          # high reasoning is now stable with the penalties below
+   export CHAT_ENABLE_THINKING=1            # keep GLM thinking enabled (output stays hidden in Codex CLI)
+   export CODEX_REPETITION_PENALTY=1.12     # mild sampler guard to prevent runaway loops
+   export CODEX_FREQUENCY_PENALTY=0.15      # soft penalty that trims duplicate phrasing without muting answers
+   export CODEX_PRESENCE_PENALTY=0.05       # gentle topic spread so Codex doesn’t latch onto the same detail
    ```
 7. **Test from Terminal** – while the AppleScript adds convenience, first confirm the raw scripts work:
    ```bash
    cd ~/start-mlx-codex-cli
    DETACH=1 ./scripts/start_mzbac_mlx.sh "$MLX_CODEX_MODEL_PATH" "GLM 4.5 Air" 8080
-   ./scripts/codex_wait_mlx.sh 127.0.0.1 8080 "$MLX_CODEX_PROFILE" "$MLX_CODEX_WORKSPACE" medium
+   ./scripts/codex_wait_mlx.sh 127.0.0.1 8080 "$MLX_CODEX_PROFILE" "$MLX_CODEX_WORKSPACE" high
    ```
 8. **Export the AppleScript** – once the manual run succeeds, open `applescript/Start-MLX-Codex-CLI.applescript` in Script Editor, export as an application, and keep it on your Desktop.
 
@@ -112,10 +115,13 @@ All tunables are environment variables. You can set them in your shell profile, 
 | `MLX_CODEX_HOST` | `127.0.0.1` | Hostname Codex will target. |
 | `MLX_CODEX_PORT` | `8080` | Port for the MLX HTTP server. |
 | `MLX_CODEX_PROFILE` | `mlx-codex-45` | Codex profile name. |
-| `MLX_CODEX_REASONING` | `medium` | Reasoning effort flag passed to Codex (`-c model_reasoning_effort=`). Set `SKIP_REASONING_FLAG=1` to omit. |
+| `MLX_CODEX_REASONING` | `medium` | Reasoning effort flag passed to Codex (`-c model_reasoning_effort=`). Leave at `medium` if you want stock behavior, or set `high` together with the penalties above for the best GLM-4.6 experience. Set `SKIP_REASONING_FLAG=1` to omit. |
 | `MLX_CODEX_LOG_FILE` | `~/Library/Logs/mzbac-mlx-lm-<port>.log` | Location for MLX server logs when running detached. |
 | `MLX_CODEX_READINESS_TIMEOUT` | `300` | Seconds to wait for `/v1/models` before giving up. |
 | `CHAT_ENABLE_THINKING` | `1` | Enables GLM “thinking” XML tokens when supported. Set `0` for models that do not implement the `<think>` stream. |
+| `CODEX_REPETITION_PENALTY` | _(unset)_ | Optional Codex CLI sampling override. Set `1.12` (our default) to keep high-reasoning traces from looping while still allowing the model to repeat important tokens. |
+| `CODEX_FREQUENCY_PENALTY` | _(unset)_ | Optional Codex CLI sampling override. Set `0.15` (our default) to gently discourage verbatim restatements without muting necessary numbers or code. |
+| `CODEX_PRESENCE_PENALTY` | _(unset)_ | Optional extra guard. Set `0.05` (our default) to nudge Codex toward fresh evidence while keeping summaries coherent. |
 | `PROXY_BASE` | _(unset)_ | If Codex should call the MLX server through a proxy base URL. |
 
 All scripts respect standard env expansion, so you can integrate them with launchd services, cron jobs, or other orchestrators.
@@ -124,10 +130,7 @@ All scripts respect standard env expansion, so you can integrate them with launc
 
 ## Model Compatibility
 
-- **GLM 4.x (XML thinking tags)**: Supported out of the box. The launcher sets `--chat-template-args '{"enable_thinking":true}'` when `CHAT_ENABLE_THINKING=1`.
-> ⚠️ **Reasoning stability:** With GLM 4.x we observed that setting Codex reasoning to `medium` while keeping `CHAT_ENABLE_THINKING=1` produces the most stable responses. Using `low`, `high`, or omitting the reasoning flag entirely can lead to runaway thinking loops or Codex retries; only change these defaults if you are deliberately experimenting and ready to kill/restart the run.
-
-- **GLM 4.x (XML thinking tags)**: Supported out of the box. The launcher sets `--chat-template-args '{"enable_thinking":true}'` when `CHAT_ENABLE_THINKING=1`. If you encounter a model that chokes on the extra arguments, export `CHAT_ENABLE_THINKING=0` before launching.
+- **GLM 4.x (XML thinking tags)**: Supported out of the box. The launcher sets `--chat-template-args '{"enable_thinking":true}'` when `CHAT_ENABLE_THINKING=1`, and the Codex CLI now ships with light sampling penalties (`CODEX_REPETITION_PENALTY=1.12`, `CODEX_FREQUENCY_PENALTY=0.15`, `CODEX_PRESENCE_PENALTY=0.05`) so **high reasoning** is stable by default while `<think>` traces stay hidden from the terminal transcript. If you prefer to disable the XML stream completely, export `CHAT_ENABLE_THINKING=0` before launching.
 - **Other MLX models (Qwen, Llama, Mistral, etc.)**: Also supported so long as `mlx_lm.server` can load them. Provide the correct `MLX_CODEX_MODEL_PATH` and disable GLM-specific flags if necessary. These models typically ignore unused arguments but you can be explicit with `CHAT_ENABLE_THINKING=0`.
 - **LM Studio-managed servers**: If you prefer LM Studio’s in-app server instead of `mlx_lm.server`, skip `start_mzbac_mlx.sh` and point `codex_wait_mlx.sh` at LM Studio’s host/port. The rest of the workflow (readiness polling + Codex launch) is identical.
 
@@ -146,7 +149,7 @@ DETACH=1 ./scripts/start_mzbac_mlx.sh "$MLX_CODEX_MODEL_PATH" "My Model" 8080
 
 MLX_CODEX_WORKSPACE=/path/to/workspace \
 MLX_CODEX_PROFILE=my-profile \
-./scripts/codex_wait_mlx.sh 127.0.0.1 8080 my-profile "$MLX_CODEX_WORKSPACE" medium
+./scripts/codex_wait_mlx.sh 127.0.0.1 8080 my-profile "$MLX_CODEX_WORKSPACE" high
 ```
 
 This is the same sequence the AppleScript follows, just without opening Terminal tabs.
