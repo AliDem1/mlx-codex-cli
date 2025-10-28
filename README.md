@@ -86,6 +86,7 @@ If you are new to MLX or Codex, follow these small steps in order:
    export MLX_CODEX_PROFILE=mlx-codex-45
    export MLX_CODEX_REASONING=high          # high reasoning is now stable with the penalties below
    export CHAT_ENABLE_THINKING=1            # keep GLM thinking enabled (output stays hidden in Codex CLI)
+   # Penalties already baked in; export only if you want to override the defaults
    export CODEX_REPETITION_PENALTY=1.12     # mild sampler guard to prevent runaway loops
    export CODEX_FREQUENCY_PENALTY=0.15      # soft penalty that trims duplicate phrasing without muting answers
    export CODEX_PRESENCE_PENALTY=0.05       # gentle topic spread so Codex doesn’t latch onto the same detail
@@ -119,9 +120,9 @@ All tunables are environment variables. You can set them in your shell profile, 
 | `MLX_CODEX_LOG_FILE` | `~/Library/Logs/mzbac-mlx-lm-<port>.log` | Location for MLX server logs when running detached. |
 | `MLX_CODEX_READINESS_TIMEOUT` | `300` | Seconds to wait for `/v1/models` before giving up. |
 | `CHAT_ENABLE_THINKING` | `1` | Enables GLM “thinking” XML tokens when supported. Set `0` for models that do not implement the `<think>` stream. |
-| `CODEX_REPETITION_PENALTY` | _(unset)_ | Optional Codex CLI sampling override. Set `1.12` (our default) to keep high-reasoning traces from looping while still allowing the model to repeat important tokens. |
-| `CODEX_FREQUENCY_PENALTY` | _(unset)_ | Optional Codex CLI sampling override. Set `0.15` (our default) to gently discourage verbatim restatements without muting necessary numbers or code. |
-| `CODEX_PRESENCE_PENALTY` | _(unset)_ | Optional extra guard. Set `0.05` (our default) to nudge Codex toward fresh evidence while keeping summaries coherent. |
+| `CODEX_REPETITION_PENALTY` | `1.12` | Codex CLI sampling override (override via env to change). Keeps high-reasoning traces from looping while still allowing the model to repeat important tokens. |
+| `CODEX_FREQUENCY_PENALTY` | `0.15` | Codex CLI sampling override (override via env to change). Gently discourages verbatim restatements without muting necessary numbers or code. |
+| `CODEX_PRESENCE_PENALTY` | `0.05` | Codex CLI sampling override (override via env to change). Nudges Codex toward fresh evidence while keeping summaries coherent. |
 | `PROXY_BASE` | _(unset)_ | If Codex should call the MLX server through a proxy base URL. |
 
 All scripts respect standard env expansion, so you can integrate them with launchd services, cron jobs, or other orchestrators.
