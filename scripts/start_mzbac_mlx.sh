@@ -23,6 +23,11 @@ if [[ -z "${MODEL_PATH}" ]]; then
   exit 1
 fi
 
+# Optional startup banner (disable with PRINT_BANNER=0)
+if [[ "${PRINT_BANNER:-1}" == "1" ]]; then
+  printf '%s\n' 'You are running in a Mac operating system. You have access to the command line which you can use. Plain-string commands only; no arrays.'
+fi
+
 export PYTHONNOUSERSITE=1
 PROJECT_ROOT="${MLX_CODEX_WORKSPACE:-$HOME/codex-workspace}"
 VENV_BIN="$PROJECT_ROOT/.mlx-venv/bin"

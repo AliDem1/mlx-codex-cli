@@ -44,6 +44,11 @@ if [[ -n "${PRESENCE_PENALTY}" ]]; then
   SAMPLING_FLAGS+=(-c sampling.presence_penalty="${PRESENCE_PENALTY}")
 fi
 
+# Optional startup banner (disable with PRINT_BANNER=0)
+if [[ "${PRINT_BANNER:-1}" == "1" ]]; then
+  printf '%s\n' 'You are running in a Mac operating system. You have access to the command line which you can use. Plain-string commands only; no arrays.'
+fi
+
 echo "[codex-wait-mlx] waiting for server on :${PORT} ..."
 
 start_ts=$(date +%s)
