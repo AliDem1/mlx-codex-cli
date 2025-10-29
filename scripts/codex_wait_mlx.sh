@@ -27,6 +27,7 @@ REASONING=${5:-medium}
 BASE_URL="http://${HOST}:${PORT}/v1"
 TIMEOUT=${READINESS_TIMEOUT:-300}
 LOG_FILE=${LOG_FILE:-"$HOME/Library/Logs/mzbac-mlx-lm-${PORT}.log"}
+SHOW_THINKING=${CHAT_SHOW_THINKING:-1}
 
 REPETITION_PENALTY=${CODEX_REPETITION_PENALTY:-1.12}
 FREQUENCY_PENALTY=${CODEX_FREQUENCY_PENALTY:-0.15}
@@ -72,22 +73,26 @@ fi
 cd "$WORKDIR"
 if [[ "${SKIP_REASONING_FLAG:-}" == "1" ]]; then
   if [[ -n "${PROXY_BASE:-}" ]]; then
-    exec codex --profile "$PROFILE" \
+    exec codex --full-auto --profile "$PROFILE" \
       -c model_providers.mlx.base_url="$PROXY_BASE" \
+      ${SHOW_THINKING:+--show-thinking} \
       "${SAMPLING_FLAGS[@]}"
   else
-    exec codex --profile "$PROFILE" \
+    exec codex --full-auto --profile "$PROFILE" \
+      ${SHOW_THINKING:+--show-thinking} \
       "${SAMPLING_FLAGS[@]}"
   fi
 else
   if [[ -n "${PROXY_BASE:-}" ]]; then
-    exec codex --profile "$PROFILE" \
+    exec codex --full-auto --profile "$PROFILE" \
       -c model_providers.mlx.base_url="$PROXY_BASE" \
       -c model_reasoning_effort="$REASONING" \
+      ${SHOW_THINKING:+--show-thinking} \
       "${SAMPLING_FLAGS[@]}"
   else
-    exec codex --profile "$PROFILE" \
+    exec codex --full-auto --profile "$PROFILE" \
       -c model_reasoning_effort="$REASONING" \
+      ${SHOW_THINKING:+--show-thinking} \
       "${SAMPLING_FLAGS[@]}"
   fi
 fi
